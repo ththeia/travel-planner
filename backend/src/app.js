@@ -17,4 +17,8 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/api/trips', (req, res) => {
+  res.status(200).json({ message: 'Trips endpoint works' });
+});
+
 export default app;
