@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';          //  asta încarcă .env automat, înainte de orice alt import
 import app from './app.js';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 4000;
 
