@@ -1,44 +1,49 @@
 <template>
-  <div style="text-align:center; margin-top:120px;">
-    <h1 style="font-size:32px;"> Travel Planner</h1>
-    <p style="margin:12px 0 24px; color:#555;">
-      Plan your trips and activities easily.
+  <div style="max-width:420px; margin:40px auto;">
+    <h1>Login</h1>
+
+    <div style="display:grid; gap:10px; margin-top:12px;">
+      <input v-model="email" placeholder="Email" />
+      <input v-model="password" type="password" placeholder="Password" />
+      <button @click="onLogin" :disabled="loading">Login</button>
+    </div>
+
+    <p v-if="error" style="color:#b00020; margin-top:10px;">{{ error }}</p>
+
+    <p style="margin-top:14px;">
+      Don’t have an account?
+      <router-link to="/register">Register</router-link>
     </p>
-
-    <!-- dacă NU e logat -->
-    <div v-if="!isAuthenticated" style="display:flex; gap:12px; justify-content:center;">
-      <router-link to="/login">
-        <button>Login</button>
-      </router-link>
-
-      <router-link to="/register">
-        <button>Register</button>
-      </router-link>
-    </div>
-
-    <!-- dacă E logat -->
-    <div v-else style="display:flex; gap:12px; justify-content:center;">
-      <router-link to="/trips">
-        <button>→ Go to My Trips</button>
-      </router-link>
-
-      <button @click="logout">Logout</button>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-const authStore = useAuthStore();
 const router = useRouter();
+const authStore = useAuthStore();
 
-const isAuthenticated = computed(() => authStore.isAuthenticated);
+const email = ref("");
+const password = ref("");
+const error = ref(null);
+const loading = ref(false);
 
-async function logout() {
-  await authStore.logout();
-  router.push("/");
+async function onLogin() {
+  error.value = null;
+  loading.value = true;
+
+  try {
+    await authStore.login(email.value.trim(), password.value);
+
+    // după login -> trips
+    router.push("/trips");
+  } catch (e) {
+    console.error("Login error:", e);
+    error.value = `${e.code || "auth/error"}: ${e.message || "Login failed"}`;
+  } finally {
+    loading.value = false;
+  }
 }
 </script>
