@@ -1,13 +1,13 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import { createRouter, createWebHistory } from "vue-router";
+import MyTripsView from "@/views/MyTripsView.vue";
+import AddTripView from "@/views/AddTripView.vue";
 
 const routes = [
-  { path: '/', name: 'home', component: HomeView }
+  { path: "/", name: "trips", component: MyTripsView },
+  { path: "/add-trip", name: "add-trip", component: AddTripView },
 ];
 
-const router = createRouter({
+export default createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 });
-
-export default router;
