@@ -1,4 +1,3 @@
-
 <template>
   <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:16px;">
     <h3 style="margin:0 0 12px;">Add Trip</h3>
@@ -36,12 +35,52 @@ const tripStore = useTripStore();
 const form = reactive({ country: "", date: "", budget: 0 });
 const error = ref("");
 
+function validateCalendarDateYYYYMMDD(dateStr) {
+  // format strict YYYY-MM-DD
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return "date must be YYYY-MM-DD";
+  }
+
+  const [yStr, mStr, dStr] = dateStr.split("-");
+  const year = Number(yStr);
+  const month = Number(mStr);
+  const day = Number(dStr);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return "invalid date values";
+  }
+
+  const currentYear = new Date().getFullYear();
+  if (year < currentYear) {
+    return `year must be >= ${currentYear}`;
+  }
+
+  if (month < 1 || month > 12) {
+    return "month must be between 01 and 12";
+  }
+
+  // zile valide pentru luna respectivă (include leap year)
+  const daysInMonth = new Date(year, month, 0).getDate(); // month: 1-12 OK
+  if (day < 1 || day > daysInMonth) {
+    return `day must be between 01 and ${String(daysInMonth).padStart(2, "0")}`;
+  }
+
+  return null;
+}
+
 function validate() {
   error.value = "";
+
   if (!form.country.trim()) return (error.value = "country is required"), false;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date)) return (error.value = "date must be YYYY-MM-DD"), false;
-  if (typeof form.budget !== "number" || Number.isNaN(form.budget) || form.budget < 0)
+
+  const dateStr = String(form.date || "").trim();
+  const dateErr = validateCalendarDateYYYYMMDD(dateStr);
+  if (dateErr) return (error.value = dateErr), false;
+
+  if (typeof form.budget !== "number" || Number.isNaN(form.budget) || form.budget < 0) {
     return (error.value = "budget must be a number >= 0"), false;
+  }
+
   return true;
 }
 
@@ -50,7 +89,7 @@ async function save() {
 
   await tripStore.createTrip({
     country: form.country.trim(),
-    date: form.date.trim(),
+    date: String(form.date).trim(),
     budget: form.budget,
   });
 

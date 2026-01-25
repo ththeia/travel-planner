@@ -12,11 +12,34 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
+function validateCalendarDateYYYYMMDD(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return "date must be YYYY-MM-DD";
+
+  const [yStr, mStr, dStr] = dateStr.split("-");
+  const year = Number(yStr);
+  const month = Number(mStr);
+  const day = Number(dStr);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return "invalid date values";
+  }
+
+  const currentYear = new Date().getFullYear();
+  if (year < currentYear) return `year must be >= ${currentYear}`;
+
+  if (month < 1 || month > 12) return "month must be between 01 and 12";
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) return "invalid day for month";
+
+  return null;
+}
+
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "Travel Planner API" });
 });
 
-// TRIPS
+// -------------------- TRIPS --------------------
 
 // GET public (returnează toate trips; frontend filtrează pe createdBy)
 app.get("/api/trips", async (req, res) => {
@@ -30,23 +53,6 @@ app.get("/api/trips", async (req, res) => {
   }
 });
 
-// GET public (un singur trip după id)
-app.get("/api/trips/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const doc = await db.collection("trips").doc(id).get();
-    if (!doc.exists) {
-      return res.status(404).json({ message: "trip not found" });
-    }
-
-    return res.status(200).json({ id: doc.id, ...doc.data() });
-  } catch (err) {
-    console.error("Firestore GET /api/trips/:id error:", err);
-    return res.status(500).json({ message: "Failed to fetch trip" });
-  }
-});
-
 // POST protejat (setează createdBy)
 app.post("/api/trips", requireAuth, async (req, res) => {
   try {
@@ -56,10 +62,21 @@ app.post("/api/trips", requireAuth, async (req, res) => {
       return res.status(400).json({ message: "country is required" });
     }
 
+    const dateStr = String(date || "").trim();
+    const dateErr = validateCalendarDateYYYYMMDD(dateStr);
+    if (dateErr) {
+      return res.status(400).json({ message: dateErr });
+    }
+
+    const budgetNumber = Number(budget);
+    if (!Number.isFinite(budgetNumber) || budgetNumber < 0) {
+      return res.status(400).json({ message: "budget must be a number >= 0" });
+    }
+
     const trip = {
       country: country.trim(),
-      date: date ? String(date) : "",
-      budget: Number(budget) || 0,
+      date: dateStr,
+      budget: budgetNumber,
       createdAt: new Date().toISOString(),
       createdBy: req.user.uid,
     };
@@ -81,8 +98,11 @@ app.put("/api/trips/:id", requireAuth, async (req, res) => {
     if (!country || typeof country !== "string" || !country.trim()) {
       return res.status(400).json({ message: "country is required" });
     }
-    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return res.status(400).json({ message: "date must be YYYY-MM-DD" });
+
+    const dateStr = String(date || "").trim();
+    const dateErr = validateCalendarDateYYYYMMDD(dateStr);
+    if (dateErr) {
+      return res.status(400).json({ message: dateErr });
     }
 
     const budgetNumber = Number(budget);
@@ -104,7 +124,7 @@ app.put("/api/trips/:id", requireAuth, async (req, res) => {
 
     const updatedTrip = {
       country: country.trim(),
-      date,
+      date: dateStr,
       budget: budgetNumber,
       updatedAt: new Date().toISOString(),
     };
@@ -150,7 +170,7 @@ app.delete("/api/trips/:tripId", requireAuth, async (req, res) => {
   }
 });
 
-// ACTIVITIES 
+// -------------------- ACTIVITIES --------------------
 
 // GET public
 app.get("/api/trips/:tripId/activities", async (req, res) => {
