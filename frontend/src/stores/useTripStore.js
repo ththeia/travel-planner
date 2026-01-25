@@ -1,42 +1,45 @@
 import { defineStore } from "pinia";
+import { useAuthStore } from "@/stores/useAuthStore";
 
-const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+async function authHeadersIfAny() {
+  const authStore = useAuthStore();
+  const token = await authStore.getToken();
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
 
 export const useTripStore = defineStore("trips", {
   state: () => ({
-    // trips
     trips: [],
     loading: false,
     error: null,
-    selectedTripId: null,
 
-    // activities
-    activitiesByTripId: {},            // { [tripId]: Activity[] }
-    activitiesLoadingByTripId: {},     // { [tripId]: boolean }
-    activitiesErrorByTripId: {},       // { [tripId]: string|null }
+    activitiesByTripId: {},
+    activitiesLoadingByTripId: {},
+    activitiesErrorByTripId: {},
   }),
 
-  getters: {
-    selectedTrip(state) {
-      return state.trips.find((t) => t.id === state.selectedTripId) || null;
-    },
-  },
-
   actions: {
-
-    // TRIPS
+    // GET (public) dar dacă ești logat trimite token => primești doar trips-urile tale
     async fetchTrips() {
       this.loading = true;
       this.error = null;
-      try {
-        const res = await fetch(`${API}/api/trips`);
-        if (!res.ok) throw new Error(`GET /api/trips failed: ${res.status}`);
-        const data = await res.json();
-        this.trips = data;
 
-        if (!this.selectedTripId && this.trips.length) {
-          this.selectedTripId = this.trips[0].id;
+      try {
+        const headers = await authHeadersIfAny();
+
+        const res = await fetch(`${API_BASE}/api/trips`, {
+          headers,
+        });
+
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || "Failed to fetch trips");
         }
+
+        this.trips = await res.json();
       } catch (e) {
         this.error = e.message || "Failed to fetch trips";
       } finally {
@@ -46,160 +49,162 @@ export const useTripStore = defineStore("trips", {
 
     async createTrip(payload) {
       this.error = null;
-      try {
-        const res = await fetch(`${API}/api/trips`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.message || `POST failed: ${res.status}`);
 
-        // adăugăm în listă (sus)
-        this.trips.unshift(data);
-        this.selectedTripId = data.id;
-        return data;
-      } catch (e) {
-        this.error = e.message || "Failed to create trip";
-        throw e;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(await authHeadersIfAny()),
+      };
+
+      const res = await fetch(`${API_BASE}/api/trips`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || "Failed to create trip");
       }
+
+      const created = await res.json();
+      // re-fetch ca să fie sigur sincron cu user filtering
+      await this.fetchTrips();
+      return created;
     },
 
-    async updateTrip(tripId, payload) {
+    async updateTrip(id, payload) {
       this.error = null;
-      try {
-        const res = await fetch(`${API}/api/trips/${tripId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.message || `PUT failed: ${res.status}`);
 
-        // actualizăm în listă
-        const idx = this.trips.findIndex((t) => t.id === tripId);
-        if (idx !== -1) this.trips[idx] = { ...this.trips[idx], ...data };
-        return data;
-      } catch (e) {
-        this.error = e.message || "Failed to update trip";
-        throw e;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(await authHeadersIfAny()),
+      };
+
+      const res = await fetch(`${API_BASE}/api/trips/${id}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || "Failed to update trip");
       }
+
+      const updated = await res.json();
+      await this.fetchTrips();
+      return updated;
     },
 
     async deleteTrip(tripId) {
       this.error = null;
-      try {
-        const res = await fetch(`${API}/api/trips/${tripId}`, { method: "DELETE" });
 
-        // backend-ul tău returnează 204 pe succes
-        if (!res.ok && res.status !== 204) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || `DELETE failed: ${res.status}`);
-        }
+      const headers = await authHeadersIfAny();
 
-        this.trips = this.trips.filter((t) => t.id !== tripId);
-        if (this.selectedTripId === tripId) {
-          this.selectedTripId = this.trips[0]?.id ?? null;
-        }
+      const res = await fetch(`${API_BASE}/api/trips/${tripId}`, {
+        method: "DELETE",
+        headers,
+      });
 
-        // curățăm și cache-ul de activities pentru trip-ul șters
-        delete this.activitiesByTripId[tripId];
-        delete this.activitiesLoadingByTripId[tripId];
-        delete this.activitiesErrorByTripId[tripId];
-      } catch (e) {
-        this.error = e.message || "Failed to delete trip";
-        throw e;
+      if (!res.ok && res.status !== 204) {
+        const msg = await res.text();
+        throw new Error(msg || "Failed to delete trip");
       }
+
+      await this.fetchTrips();
     },
 
-    selectTrip(tripId) {
-      this.selectedTripId = tripId;
-    },
-
-  
     // ACTIVITIES
     async fetchActivities(tripId) {
-      if (!tripId) return;
       this.activitiesLoadingByTripId[tripId] = true;
       this.activitiesErrorByTripId[tripId] = null;
 
       try {
-        const res = await fetch(`${API}/api/trips/${tripId}/activities`);
-        if (!res.ok) throw new Error(`GET activities failed: ${res.status}`);
+        const headers = await authHeadersIfAny();
+
+        const res = await fetch(`${API_BASE}/api/trips/${tripId}/activities`, {
+          headers,
+        });
+
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || "Failed to fetch activities");
+        }
+
         const data = await res.json();
         this.activitiesByTripId[tripId] = data;
       } catch (e) {
-        this.activitiesErrorByTripId[tripId] = e.message || "Failed to fetch activities";
+        this.activitiesErrorByTripId[tripId] =
+          e.message || "Failed to fetch activities";
       } finally {
         this.activitiesLoadingByTripId[tripId] = false;
       }
     },
 
     async createActivity(tripId, payload) {
-      if (!tripId) return;
-      this.activitiesErrorByTripId[tripId] = null;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(await authHeadersIfAny()),
+      };
 
-      try {
-        const res = await fetch(`${API}/api/trips/${tripId}/activities`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.message || `POST activity failed: ${res.status}`);
+      const res = await fetch(`${API_BASE}/api/trips/${tripId}/activities`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
 
-        const arr = this.activitiesByTripId[tripId] || [];
-        this.activitiesByTripId[tripId] = [data, ...arr];
-        return data;
-      } catch (e) {
-        this.activitiesErrorByTripId[tripId] = e.message || "Failed to create activity";
-        throw e;
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || "Failed to create activity");
       }
+
+      const created = await res.json();
+      await this.fetchActivities(tripId);
+      return created;
     },
 
     async updateActivity(tripId, activityId, payload) {
-      if (!tripId || !activityId) return;
-      this.activitiesErrorByTripId[tripId] = null;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(await authHeadersIfAny()),
+      };
 
-      try {
-        const res = await fetch(`${API}/api/trips/${tripId}/activities/${activityId}`, {
+      const res = await fetch(
+        `${API_BASE}/api/trips/${tripId}/activities/${activityId}`,
+        {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.message || `PUT activity failed: ${res.status}`);
+        }
+      );
 
-        const arr = this.activitiesByTripId[tripId] || [];
-        this.activitiesByTripId[tripId] = arr.map((a) =>
-          a.id === activityId ? { ...a, ...data } : a
-        );
-        return data;
-      } catch (e) {
-        this.activitiesErrorByTripId[tripId] = e.message || "Failed to update activity";
-        throw e;
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || "Failed to update activity");
       }
+
+      const updated = await res.json();
+      await this.fetchActivities(tripId);
+      return updated;
     },
 
     async deleteActivity(tripId, activityId) {
-      if (!tripId || !activityId) return;
-      this.activitiesErrorByTripId[tripId] = null;
+      const headers = await authHeadersIfAny();
 
-      try {
-        const res = await fetch(`${API}/api/trips/${tripId}/activities/${activityId}`, {
+      const res = await fetch(
+        `${API_BASE}/api/trips/${tripId}/activities/${activityId}`,
+        {
           method: "DELETE",
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || `DELETE activity failed: ${res.status}`);
+          headers,
         }
+      );
 
-        const arr = this.activitiesByTripId[tripId] || [];
-        this.activitiesByTripId[tripId] = arr.filter((a) => a.id !== activityId);
-      } catch (e) {
-        this.activitiesErrorByTripId[tripId] = e.message || "Failed to delete activity";
-        throw e;
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || "Failed to delete activity");
       }
+
+      await this.fetchActivities(tripId);
     },
   },
 });
