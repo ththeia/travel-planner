@@ -2,10 +2,21 @@
   <div class="layout">
     <header class="header">
       <div class="header-inner">
-    
+        <router-link to="/trips" class="brand" aria-label="Go to Trips">
           <span class="brand-icon" aria-hidden="true">✈️</span>
           <span class="brand-text">Travel Planner</span>
+        </router-link>
 
+        <div class="actions">
+          <button
+            v-if="showLogout"
+            class="btn btn-logout"
+            type="button"
+            @click="handleLogout"
+          >
+            Log out
+          </button>
+        </div>
       </div>
     </header>
 
@@ -16,6 +27,31 @@
     </main>
   </div>
 </template>
+
+<script setup>
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/useAuthStore";
+
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+
+// Nu afișăm Log out pe paginile publice
+const isAuthPage = computed(() => route.path === "/login" || route.path === "/register");
+
+// Afișăm Log out doar după ce Firebase a terminat init (loading=false) și există user
+const showLogout = computed(() => !authStore.loading && !!authStore.user && !isAuthPage.value);
+
+async function handleLogout() {
+  try {
+    await authStore.logout();
+    router.push("/login");
+  } catch (e) {
+    console.error("Logout failed:", e);
+  }
+}
+</script>
 
 <style scoped>
 :global(:root) {
@@ -39,7 +75,7 @@
     linear-gradient(180deg, #f7fbff, #fff);
 }
 
-/* Header*/
+/* Header */
 .header {
   position: sticky;
   top: 0;
@@ -59,7 +95,6 @@
   align-items: center;
   justify-content: space-between;
 
-  /* “container” */
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 18px;
@@ -95,6 +130,37 @@
   font-size: 16px;
 }
 
+/* Right actions */
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.05s ease, filter 0.15s ease, background 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-logout {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(20, 184, 166, 0.18);
+}
+
+.btn-logout:hover {
+  background: var(--accentHover);
+}
+
 /* Content */
 .content {
   flex: 1;
@@ -107,15 +173,9 @@
 }
 
 /* Responsive */
-@media (max-width: 420px) {
+@media (max-width: 520px) {
   .header-inner {
     padding: 0 14px;
-  }
-  .brand-text {
-    font-size: 15px;
-  }
-  .content {
-    padding: 14px;
   }
 }
 </style>

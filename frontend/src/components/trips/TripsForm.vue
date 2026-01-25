@@ -1,3 +1,4 @@
+
 <template>
   <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:16px;">
     <h3 style="margin:0 0 12px;">Add Trip</h3>

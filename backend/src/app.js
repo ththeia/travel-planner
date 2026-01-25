@@ -16,7 +16,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "Travel Planner API" });
 });
 
-// -------------------- TRIPS --------------------
+// TRIPS
 
 // GET public (returnează toate trips; frontend filtrează pe createdBy)
 app.get("/api/trips", async (req, res) => {
@@ -27,6 +27,23 @@ app.get("/api/trips", async (req, res) => {
   } catch (err) {
     console.error("Firestore GET /api/trips error:", err);
     return res.status(500).json({ message: "Failed to fetch trips" });
+  }
+});
+
+// GET public (un singur trip după id)
+app.get("/api/trips/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const doc = await db.collection("trips").doc(id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ message: "trip not found" });
+    }
+
+    return res.status(200).json({ id: doc.id, ...doc.data() });
+  } catch (err) {
+    console.error("Firestore GET /api/trips/:id error:", err);
+    return res.status(500).json({ message: "Failed to fetch trip" });
   }
 });
 
@@ -133,7 +150,7 @@ app.delete("/api/trips/:tripId", requireAuth, async (req, res) => {
   }
 });
 
-// -------------------- ACTIVITIES --------------------
+// ACTIVITIES 
 
 // GET public
 app.get("/api/trips/:tripId/activities", async (req, res) => {
