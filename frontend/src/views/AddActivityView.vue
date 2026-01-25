@@ -62,7 +62,7 @@ const error = computed(() => tripStore.activitiesErrorByTripId?.[tripId] || null
 const router = useRouter();
 
 function goBack() {
-  router.push("/");
+  router.push("/trips");
 }
 
 
