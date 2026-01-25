@@ -113,7 +113,7 @@ async function saveEdit() {
   }
 }
 
-// If trip changes from outside (e.g. refresh), keep edit form in sync
+
 watch(
   () => props.trip,
   () => {
