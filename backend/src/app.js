@@ -121,6 +121,44 @@ app.post('/api/trips/:tripId/activities', async (req, res) => {
   }
 });
 
+app.put("/api/trips/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { country, date, budget } = req.body;
+
+    // validări
+    if (!country || typeof country !== "string" || !country.trim()) {
+      return res.status(400).json({ message: "country is required" });
+    }
+
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ message: "date must be YYYY-MM-DD" });
+    }
+
+    const budgetNumber = Number(budget);
+    if (Number.isNaN(budgetNumber) || budgetNumber < 0) {
+      return res.status(400).json({ message: "budget must be a number >= 0" });
+    }
+
+    const updatedTrip = {
+      country: country.trim(),
+      date,
+      budget: budgetNumber,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.collection("trips").doc(id).set(updatedTrip, { merge: true });
+
+    return res.status(200).json({
+      id,
+      ...updatedTrip,
+    });
+  } catch (err) {
+    console.error("Firestore PUT /api/trips error:", err);
+    return res.status(500).json({ message: "Failed to update trip" });
+  }
+});
+
 app.put("/api/trips/:tripId/activities/:activityId", async (req, res) => {
   try {
     const { tripId, activityId } = req.params;
