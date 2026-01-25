@@ -3,19 +3,26 @@
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <h2 style="margin:0;">Activities</h2>
 
+      <!-- butonul Add (îl poți lăsa să ducă în pagina nouă sau îl faci inline, vezi mai jos) -->
       <router-link :to="`/trips/${tripId}/add-activity`">
         <button>Add activity</button>
       </router-link>
     </div>
 
-    <div v-if="!tripId" style="color:#666; margin-top:8px;">
-      Select a trip to see activities.
+    <!-- FORM EDIT INLINE -->
+    <div v-if="editingActivity" style="margin-top:12px;">
+      <ActivityForm
+        :tripId="tripId"
+        :editingActivity="editingActivity"
+        @saved="onSaved"
+        @cancel="onCancel"
+      />
     </div>
 
-    <template v-else>
-      <div v-if="loading" style="margin-top:8px;">Loading activities…</div>
-      <div v-else-if="error" style="margin-top:8px; color:#b00020;">{{ error }}</div>
-      <div v-else-if="activities.length === 0" style="margin-top:8px; color:#666;">
+    <div style="margin-top:12px;">
+      <div v-if="loading">Loading activities…</div>
+      <div v-else-if="error" style="color:#b00020;">{{ error }}</div>
+      <div v-else-if="activities.length === 0" style="color:#666;">
         No activities yet.
       </div>
 
@@ -23,17 +30,19 @@
         v-else
         :tripId="tripId"
         :activities="activities"
-        @edit="handleEdit"
-        @delete="handleDelete"
+        @edit="onEdit"
+        @delete="onDelete"
       />
-    </template>
+    </div>
   </section>
 </template>
 
 <script setup>
 import { computed, ref, watch } from "vue";
 import { useTripStore } from "@/stores/useTripStore";
+
 import ActivityList from "./ActivityList.vue";
+import ActivityForm from "./ActivityForm.vue";
 
 const props = defineProps({
   tripId: { type: String, required: true },
@@ -51,19 +60,27 @@ watch(
   async (id) => {
     editingActivity.value = null;
     if (!id) return;
-    if (!tripStore.activitiesByTripId?.[id]) {
-      await tripStore.fetchActivities(id);
-    }
+    await tripStore.fetchActivities(id);
   },
   { immediate: true }
 );
 
-function handleEdit(activity) {
-  // pentru moment edit rămâne inline (funcționează deja)
+function onEdit(activity) {
   editingActivity.value = activity;
 }
 
-async function handleDelete(activityId) {
+async function onDelete(activityId) {
   await tripStore.deleteActivity(props.tripId, activityId);
+  if (editingActivity.value?.id === activityId) {
+    editingActivity.value = null;
+  }
+}
+
+function onSaved() {
+  editingActivity.value = null;
+}
+
+function onCancel() {
+  editingActivity.value = null;
 }
 </script>
