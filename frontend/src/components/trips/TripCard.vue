@@ -4,25 +4,26 @@
       <div>
         <template v-if="!isEditing">
           <div style="font-weight:700; font-size:18px;">{{ trip.country }}</div>
-          <div style="opacity:.8;">Date: {{ trip.date }}</div>
-          <div style="opacity:.8;">Budget: {{ trip.budget }}</div>
+          <div style="opacity:.8;">Data: {{ trip.date }}</div>
+          <div style="opacity:.8;">Buget: {{ trip.budget }}</div>
         </template>
 
         <template v-else>
-         
-            <div style="border: 1px dashed #ddd;border-radius: 8px;padding: 12px;margin-bottom: 16px;background: #fafafa;display: flex;flex-direction: column;gap: 8px;max-width: 420px;">
+          <div
+            style="border: 1px dashed #ddd;border-radius: 8px;padding: 12px;margin-bottom: 16px;background: #fafafa;display: flex;flex-direction: column;gap: 8px;max-width: 420px;"
+          >
             <label style="display:flex; flex-direction:column; gap:4px;">
-              <span style="font-weight:600;">Country</span>
+              <span style="font-weight:600;">Tara</span>
               <input v-model.trim="editCountry" type="text" />
             </label>
 
             <label style="display:flex; flex-direction:column; gap:4px;">
-              <span style="font-weight:600;">Date (YYYY-MM-DD)</span>
+              <span style="font-weight:600;">Data (YYYY-MM-DD)</span>
               <input v-model="editDate" type="date" />
             </label>
 
             <label style="display:flex; flex-direction:column; gap:4px;">
-              <span style="font-weight:600;">Budget</span>
+              <span style="font-weight:600;">Buget</span>
               <input v-model.number="editBudget" type="number" min="0" step="1" />
             </label>
 
@@ -65,6 +66,37 @@ const editDate = ref("");
 const editBudget = ref(0);
 const editError = ref("");
 
+function validateCalendarDateYYYYMMDD(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return "Data trebuie sa fie de forma YYYY-MM-DD";
+  }
+
+  const [yStr, mStr, dStr] = dateStr.split("-");
+  const year = Number(yStr);
+  const month = Number(mStr);
+  const day = Number(dStr);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return "Data Invalida";
+  }
+
+  const currentYear = new Date().getFullYear();
+  if (year < currentYear) {
+    return `Anul trebuie sa fie mai mare de ${currentYear}.`;
+  }
+
+  if (month < 1 || month > 12) {
+    return "Luna trebuie sa fie intre 01 si 12";
+  }
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) {
+    return `Ziua trebuie sa fie intre 01 si ${String(daysInMonth).padStart(2, "0")}.`;
+  }
+
+  return null;
+}
+
 function hydrateEditForm() {
   editCountry.value = props.trip.country ?? "";
   editDate.value = props.trip.date ?? "";
@@ -86,33 +118,39 @@ async function saveEdit() {
   editError.value = "";
 
   if (!editCountry.value) {
-    editError.value = "Country is required.";
+    editError.value = "Trebuie sa specificati Tara de destinatie";
     return;
   }
 
-  if (!editDate.value) {
-    editError.value = "Date is required.";
+  const dateStr = String(editDate.value || "").trim();
+  if (!dateStr) {
+    editError.value = "Data este necesara.";
+    return;
+  }
+
+  const dateErr = validateCalendarDateYYYYMMDD(dateStr);
+  if (dateErr) {
+    editError.value = dateErr;
     return;
   }
 
   const budget = Number(editBudget.value);
   if (Number.isNaN(budget) || budget < 0) {
-    editError.value = "Budget must be a number >= 0.";
+    editError.value = "Bugetul trebuie sa fie mai mare sau egal cu 0";
     return;
   }
 
   try {
     await tripStore.updateTrip(props.trip.id, {
       country: editCountry.value,
-      date: editDate.value,
+      date: dateStr,
       budget,
     });
     isEditing.value = false;
   } catch (e) {
-    editError.value = e?.message || "Failed to save changes.";
+    editError.value = e?.message || "Schimbarile nu au fost salvate.";
   }
 }
-
 
 watch(
   () => props.trip,
@@ -123,12 +161,10 @@ watch(
 );
 
 async function toggle() {
-  // Avoid odd UX while editing
   if (isEditing.value) return;
 
   open.value = !open.value;
   if (open.value) {
-    // load activities only when opening (if the store supports it)
     const map = tripStore.activitiesByTripId || {};
     if (!map[props.trip.id] && typeof tripStore.fetchActivities === "function") {
       await tripStore.fetchActivities(props.trip.id);
@@ -138,7 +174,7 @@ async function toggle() {
 
 async function removeTrip() {
   if (isEditing.value) return;
-  if (!confirm("Delete this trip? (activities will be deleted too if backend does cascade)")) return;
+  if (!confirm("Vrei sa stergi aceast Trip? Vor fi sterse si activitatile afiliate.")) return;
   await tripStore.deleteTrip(props.trip.id);
 }
 </script>

@@ -5,7 +5,7 @@
     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
       <div>
         <label>Country</label>
-        <input v-model="form.country" placeholder="Romania" style="width:100%;" />
+        <input v-model="form.country" placeholder="Tara" style="width:100%;" />
       </div>
 
       <div>
@@ -38,7 +38,7 @@ const error = ref("");
 function validateCalendarDateYYYYMMDD(dateStr) {
   // format strict YYYY-MM-DD
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return "date must be YYYY-MM-DD";
+    return "Data trebuie sa fie de forma YYYY-MM-DD";
   }
 
   const [yStr, mStr, dStr] = dateStr.split("-");
@@ -47,22 +47,22 @@ function validateCalendarDateYYYYMMDD(dateStr) {
   const day = Number(dStr);
 
   if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
-    return "invalid date values";
+    return "Data Invalida";
   }
 
   const currentYear = new Date().getFullYear();
   if (year < currentYear) {
-    return `year must be >= ${currentYear}`;
+    return `Anul trebuie sa fie mai mare de  ${currentYear}`;
   }
 
   if (month < 1 || month > 12) {
-    return "month must be between 01 and 12";
+    return "Luna trebuie sa fie intre 01 si 12";
   }
 
   // zile valide pentru luna respectivă (include leap year)
   const daysInMonth = new Date(year, month, 0).getDate(); // month: 1-12 OK
   if (day < 1 || day > daysInMonth) {
-    return `day must be between 01 and ${String(daysInMonth).padStart(2, "0")}`;
+    return `Ziua trebuie sa fie intre 01 si ${String(daysInMonth).padStart(2, "0")}`;
   }
 
   return null;
@@ -78,7 +78,7 @@ function validate() {
   if (dateErr) return (error.value = dateErr), false;
 
   if (typeof form.budget !== "number" || Number.isNaN(form.budget) || form.budget < 0) {
-    return (error.value = "budget must be a number >= 0"), false;
+    return (error.value = "Bugetul trebuie sa fie mai mare sau egal cu 0"), false;
   }
 
   return true;

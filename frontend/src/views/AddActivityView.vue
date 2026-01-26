@@ -1,7 +1,7 @@
 <template>
   <div>
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h1>Activities</h1>
+      <h1>Activități</h1>
     </div>
 
     <div style="margin: 12px 0 18px;">
@@ -14,12 +14,12 @@
     </div>
 
     <div style="border:1px solid #ddd; padding:12px; border-radius:8px;">
-      <h2 style="margin:0 0 8px;">Activities List</h2>
+      <h2 style="margin:0 0 8px;">Listă activițăți</h2>
 
-      <div v-if="loading">Loading activities…</div>
+      <div v-if="loading">Se încarcă…</div>
       <div v-else-if="error" style="color:#b00020;">{{ error }}</div>
       <div v-else-if="activities.length === 0" style="color:#666;">
-        No activities yet.
+        Nu sunt activități de afișat.
       </div>
 
       <ActivityList
@@ -32,7 +32,7 @@
     </div>
 
    <button @click="goBack" style="margin-top:16px;">
-     ← Back to My Trips
+     ← Înapoi
     </button>
 
   </div>

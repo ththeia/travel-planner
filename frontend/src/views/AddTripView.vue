@@ -6,17 +6,17 @@
 
     <!-- Trips List -->
     <div style="margin-top:18px; border:1px solid #ddd; padding:12px; border-radius:8px;">
-      <h2 style="margin:0 0 8px;">Trips List</h2>
+      <h2 style="margin:0 0 8px;">Listă Trips</h2>
 
-      <div v-if="loading">Loading trips…</div>
+      <div v-if="loading">Se încarcă…</div>
       <div v-else-if="error" style="color:#b00020;">{{ error }}</div>
-      <div v-else-if="trips.length === 0" style="color:#666;">No trips yet.</div>
+      <div v-else-if="trips.length === 0" style="color:#666;">Nu sunt activități de afișat.</div>
 
       <TripList v-else :trips="trips" />
     </div>
 
   <button @click="goBack" style="margin-top:16px;">
-   ← Back to My Trips
+   ← Înapoi
   </button>
   </div>
 </template>

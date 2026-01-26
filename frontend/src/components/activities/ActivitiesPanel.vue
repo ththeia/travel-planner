@@ -1,11 +1,11 @@
 <template>
   <section style="border:1px solid #ddd; padding:12px; border-radius:8px;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Activities</h2>
+      <h2 style="margin:0;">Activitati</h2>
 
-      <!-- butonul Add (îl poți lăsa să ducă în pagina nouă sau îl faci inline, vezi mai jos) -->
+      <!-- butonul Add  -->
       <router-link :to="`/trips/${tripId}/add-activity`">
-        <button>Add activity</button>
+        <button>Adauga</button>
       </router-link>
     </div>
 
@@ -20,10 +20,10 @@
     </div>
 
     <div style="margin-top:12px;">
-      <div v-if="loading">Loading activities…</div>
+      <div v-if="loading">Se încarcă…</div>
       <div v-else-if="error" style="color:#b00020;">{{ error }}</div>
       <div v-else-if="activities.length === 0" style="color:#666;">
-        No activities yet.
+        Nu sunt activități de afișat.
       </div>
 
       <ActivityList

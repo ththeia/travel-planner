@@ -6,15 +6,15 @@
 
     <div style="display:grid; grid-template-columns:1fr 1fr 160px; gap:12px;">
       <div>
-        <label>Name</label>
+        <label>Nume</label>
         <input v-model="form.name" placeholder="Castelul Bran" style="width:100%;" />
       </div>
       <div>
-        <label>Place</label>
+        <label>Loc</label>
         <input v-model="form.place" placeholder="Brasov" style="width:100%;" />
       </div>
       <div>
-        <label>Price</label>
+        <label>Preț</label>
         <input v-model.number="form.price" type="number" min="0" style="width:100%;" />
       </div>
     </div>
@@ -61,10 +61,10 @@ watch(
 
 function validate() {
   error.value = "";
-  if (!form.name.trim()) return (error.value = "name is required"), false;
-  if (!form.place.trim()) return (error.value = "place is required"), false;
+  if (!form.name.trim()) return (error.value = "Numele este necesar"), false;
+  if (!form.place.trim()) return (error.value = "Locatia este necesara"), false;
   if (typeof form.price !== "number" || Number.isNaN(form.price) || form.price < 0)
-    return (error.value = "price must be a number >= 0"), false;
+    return (error.value = "Pretul trebuie sa fie mai mare sau egal cu 0"), false;
   return true;
 }
 
