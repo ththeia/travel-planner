@@ -1,19 +1,22 @@
 <template>
-  <div style="display:grid; gap:12px;">
-    <div
-      v-for="a in activities"
-      :key="a.id"
-      style="border:1px solid #ddd; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:flex-start;"
-    >
-      <div>
-        <strong>{{ a.name }}</strong><br />
-        Place: {{ a.place }}<br />
-        Price: {{ a.price }}
-      </div>
+  <div class="tp-list">
+    <div v-for="a in activities" :key="a.id" class="tp-card tp-activity-card">
+      <div class="tp-row" style="align-items: center;">
+        <div style="min-width:0;">
+          <p class="tp-activity-title">{{ a.name }}</p>
 
-      <div style="display:flex; gap:8px;">
-        <button @click="$emit('edit', a)">Edit</button>
-        <button @click="$emit('delete', a.id)" style="color:red;">Delete</button>
+          <div class="tp-meta" style="margin-top: 8px;">
+            <span class="tp-badge"> {{ a.place }}</span>
+            <span class="tp-badge">💸 {{ a.price }}</span>
+          </div>
+        </div>
+
+        <div class="tp-actions" style="justify-content: flex-end;">
+          <button class="tp-btn" type="button" @click="$emit('edit', a)">Editează</button>
+          <button class="tp-btn tp-btn--danger" type="button" @click="$emit('delete', a.id)">
+            Șterge
+          </button>
+        </div>
       </div>
     </div>
   </div>

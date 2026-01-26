@@ -1,16 +1,21 @@
 <template>
   <div>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h1>My Trips</h1>
+    <div class="tp-toolbar">
+      <div>
+        <h1 class="tp-page-title">Călătoriile mele</h1>
+        <p class="tp-page-subtitle">Gestionează călătoriile și activitățile în carduri.</p>
+      </div>
 
-      <router-link to="/add-trip">
-        <button>Add Trip</button>
-      </router-link>
+      <div class="tp-toolbar-right">
+        <router-link to="/add-trip">
+          <button class="tp-btn tp-btn--primary" type="button">Adaugă călătorie</button>
+        </router-link>
+      </div>
     </div>
 
-    <div v-if="tripStore.loading">Loading trips…</div>
+    <div v-if="tripStore.loading" class="tp-muted">Se încarcă călătoriile…</div>
 
-    <div v-else-if="tripStore.error" style="color:#b00020;">
+    <div v-else-if="tripStore.error" class="tp-error">
       {{ tripStore.error }}
     </div>
 

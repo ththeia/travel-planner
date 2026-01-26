@@ -1,63 +1,72 @@
 <template>
-  <div style="border:1px solid #ddd; border-radius:8px; padding:16px;">
-    <div style="display:flex; justify-content:space-between; gap:12px; align-items:start;">
+  <div class="tp-card trip-card">
+    <div class="trip-header">
       <div>
         <template v-if="!isEditing">
-          <div style="font-weight:700; font-size:18px;">{{ trip.country }}</div>
-          <div style="opacity:.8;">Data: {{ trip.date }}</div>
-          <div style="opacity:.8;">Buget: {{ trip.budget }}</div>
-        </template>
+          <h3 class="tp-title">{{ trip.country }}</h3>
 
-        <template v-else>
-          <div
-            style="border: 1px dashed #ddd;border-radius: 8px;padding: 12px;margin-bottom: 16px;background: #fafafa;display: flex;flex-direction: column;gap: 8px;max-width: 420px;"
-          >
-            <label style="display:flex; flex-direction:column; gap:4px;">
-              <span style="font-weight:600;">Tara</span>
-              <input v-model.trim="editCountry" type="text" />
-            </label>
-
-            <label style="display:flex; flex-direction:column; gap:4px;">
-              <span style="font-weight:600;">Data (YYYY-MM-DD)</span>
-              <input v-model="editDate" type="date" />
-            </label>
-
-            <label style="display:flex; flex-direction:column; gap:4px;">
-              <span style="font-weight:600;">Buget</span>
-              <input v-model.number="editBudget" type="number" min="0" step="1" />
-            </label>
-
-            <p v-if="editError" style="color:#b00020; margin:0;">{{ editError }}</p>
+          <div class="tp-meta">
+            <span class="tp-badge">📅 {{ trip.date }}</span>
+            <span class="tp-badge">💸Buget: {{ trip.budget }}</span>
           </div>
         </template>
-      </div>
-
-      <div style="display:flex; gap:8px;">
-        <template v-if="!isEditing">
-          <button @click="startEdit">Edit</button>
-          <button @click="toggle">{{ open ? "Hide activities" : "Show activities" }}</button>
-          <button @click="removeTrip" style="color:#b00020;">Delete trip</button>
-        </template>
 
         <template v-else>
-          <button @click="saveEdit">Save</button>
-          <button @click="cancelEdit">Cancel</button>
+          <div class="tp-card tp-card--soft" style="padding: 12px; margin-top: 10px;">
+            <div class="tp-form-grid">
+              <label class="tp-field">
+                <span>Țara</span>
+                <input v-model.trim="editCountry" class="tp-input" type="text" />
+              </label>
+
+              <label class="tp-field">
+                <span>Data</span>
+                <input v-model="editDate" class="tp-input" type="date" />
+              </label>
+
+              <label class="tp-field">
+                <span>Buget</span>
+                <input v-model.number="editBudget" class="tp-input" type="number" min="0" step="1" />
+              </label>
+            </div>
+
+            <div v-if="editError" class="tp-error" style="margin-top: 10px;">
+              {{ editError }}
+            </div>
+
+            <div class="tp-actions" style="margin-top: 12px;">
+              <button class="tp-btn tp-btn--primary" type="button" @click="saveEdit">Salvează</button>
+              <button class="tp-btn" type="button" @click="cancelEdit">Renunță</button>
+            </div>
+          </div>
         </template>
       </div>
     </div>
 
-    <ActivitiesPanel v-if="open" :tripId="trip.id" />
+    <div class="trip-actions" v-if="!isEditing">
+      <button class="tp-btn" type="button" @click="startEdit">Editează</button>
+
+      <button class="tp-btn" type="button" @click="toggle">
+        {{ open ? "Ascunde activitățile" : "Vezi activitățile" }}
+      </button>
+
+      <button class="tp-btn tp-btn--danger" type="button" @click="removeTrip">Șterge</button>
+    </div>
+
+    <!-- IMPORTANT: String(id) -->
+    <ActivitiesPanel v-if="open" :tripId="tripId" />
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useTripStore } from "../../stores/useTripStore";
 import ActivitiesPanel from "../activities/ActivitiesPanel.vue";
 
 const props = defineProps({ trip: { type: Object, required: true } });
 
 const tripStore = useTripStore();
+
 const open = ref(false);
 
 const isEditing = ref(false);
@@ -66,33 +75,24 @@ const editDate = ref("");
 const editBudget = ref(0);
 const editError = ref("");
 
+const tripId = computed(() => String(props.trip.id));
+
 function validateCalendarDateYYYYMMDD(dateStr) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return "Data trebuie sa fie de forma YYYY-MM-DD";
-  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return "Data trebuie să fie în formatul YYYY-MM-DD";
 
   const [yStr, mStr, dStr] = dateStr.split("-");
   const year = Number(yStr);
   const month = Number(mStr);
   const day = Number(dStr);
 
-  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
-    return "Data Invalida";
-  }
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return "Data este invalidă";
 
   const currentYear = new Date().getFullYear();
-  if (year < currentYear) {
-    return `Anul trebuie sa fie mai mare de ${currentYear}.`;
-  }
-
-  if (month < 1 || month > 12) {
-    return "Luna trebuie sa fie intre 01 si 12";
-  }
+  if (year < currentYear) return `Anul trebuie să fie mai mare de ${currentYear}.`;
+  if (month < 1 || month > 12) return "Luna trebuie să fie între 01 și 12";
 
   const daysInMonth = new Date(year, month, 0).getDate();
-  if (day < 1 || day > daysInMonth) {
-    return `Ziua trebuie sa fie intre 01 si ${String(daysInMonth).padStart(2, "0")}.`;
-  }
+  if (day < 1 || day > daysInMonth) return `Ziua trebuie să fie între 01 și ${String(daysInMonth).padStart(2, "0")}.`;
 
   return null;
 }
@@ -117,46 +117,27 @@ function cancelEdit() {
 async function saveEdit() {
   editError.value = "";
 
-  if (!editCountry.value) {
-    editError.value = "Trebuie sa specificati Tara de destinatie";
-    return;
-  }
-
+  if (!editCountry.value) return (editError.value = "Trebuie să specifici țara de destinație.");
   const dateStr = String(editDate.value || "").trim();
-  if (!dateStr) {
-    editError.value = "Data este necesara.";
-    return;
-  }
+  if (!dateStr) return (editError.value = "Data este necesară.");
 
   const dateErr = validateCalendarDateYYYYMMDD(dateStr);
-  if (dateErr) {
-    editError.value = dateErr;
-    return;
-  }
+  if (dateErr) return (editError.value = dateErr);
 
   const budget = Number(editBudget.value);
-  if (Number.isNaN(budget) || budget < 0) {
-    editError.value = "Bugetul trebuie sa fie mai mare sau egal cu 0";
-    return;
-  }
+  if (Number.isNaN(budget) || budget < 0) return (editError.value = "Bugetul trebuie să fie ≥ 0.");
 
   try {
-    await tripStore.updateTrip(props.trip.id, {
-      country: editCountry.value,
-      date: dateStr,
-      budget,
-    });
+    await tripStore.updateTrip(props.trip.id, { country: editCountry.value, date: dateStr, budget });
     isEditing.value = false;
   } catch (e) {
-    editError.value = e?.message || "Schimbarile nu au fost salvate.";
+    editError.value = e?.message || "Modificările nu au fost salvate.";
   }
 }
 
 watch(
   () => props.trip,
-  () => {
-    if (isEditing.value) hydrateEditForm();
-  },
+  () => { if (isEditing.value) hydrateEditForm(); },
   { deep: true }
 );
 
@@ -164,17 +145,21 @@ async function toggle() {
   if (isEditing.value) return;
 
   open.value = !open.value;
+
   if (open.value) {
     const map = tripStore.activitiesByTripId || {};
-    if (!map[props.trip.id] && typeof tripStore.fetchActivities === "function") {
-      await tripStore.fetchActivities(props.trip.id);
+    const id = tripId.value;
+
+    // dacă nu sunt încă în store, le aducem
+    if (!map[id] && typeof tripStore.fetchActivities === "function") {
+      await tripStore.fetchActivities(id);
     }
   }
 }
 
 async function removeTrip() {
   if (isEditing.value) return;
-  if (!confirm("Vrei sa stergi aceast Trip? Vor fi sterse si activitatile afiliate.")) return;
+  if (!confirm("Vrei să ștergi această călătorie? Vor fi șterse și activitățile asociate.")) return;
   await tripStore.deleteTrip(props.trip.id);
 }
 </script>

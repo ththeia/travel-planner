@@ -2,7 +2,7 @@
   <div class="layout">
     <header class="header">
       <div class="header-inner">
-        <router-link to="/trips" class="brand" aria-label="Go to Trips">
+        <router-link to="/trips" class="brand" aria-label="Mergi la Călătoriile mele">
           <span class="brand-icon" aria-hidden="true">✈️</span>
           <span class="brand-text">Travel Planner</span>
         </router-link>
@@ -14,14 +14,18 @@
             type="button"
             @click="handleLogout"
           >
-            Log out
+            Deconectare
           </button>
         </div>
       </div>
     </header>
 
-    <main class="content">
-      <div class="content-inner">
+    <main :class="['content', { 'content--auth': isAuthPage }]">
+      <!-- Auth pages: full-bleed -->
+      <router-view v-if="isAuthPage" />
+
+      <!-- App pages: container + surface -->
+      <div v-else class="content-inner tp tp-surface">
         <router-view />
       </div>
     </main>
@@ -37,10 +41,7 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-// Nu afișăm Log out pe paginile publice
 const isAuthPage = computed(() => route.path === "/login" || route.path === "/register");
-
-// Afișăm Log out doar după ce Firebase a terminat init (loading=false) și există user
 const showLogout = computed(() => !authStore.loading && !!authStore.user && !isAuthPage.value);
 
 async function handleLogout() {
@@ -54,39 +55,28 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-:global(:root) {
-  --bg1: #c7f9ff;
-  --bg2: #ffe6f1;
-  --accent: #14b8a6;
-  --accentHover: #0d9488;
-  --text: #12212a;
-  --muted: #5c6b73;
-  --card: #ffffff;
-  --border: #e6eef2;
-}
-
 .layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(1200px 600px at 10% 0%, rgba(199, 249, 255, 0.45), transparent 60%),
-    radial-gradient(900px 500px at 90% 10%, rgba(255, 230, 241, 0.35), transparent 55%),
-    linear-gradient(180deg, #f7fbff, #fff);
+  background: transparent;
 }
 
-/* Header */
 .header {
   position: sticky;
   top: 0;
   z-index: 20;
 
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(251, 247, 242, 0.55);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+  border-bottom: 1px solid rgba(109, 90, 207, 0.10);
+
+}
+
+.header {
+  box-shadow: 0 8px 18px rgba(31,41,55,.04);
 }
 
 .header-inner {
@@ -98,16 +88,20 @@ async function handleLogout() {
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 18px;
+
+  background: transparent;   
+  border-radius: 0;          
 }
+
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--text);
-  font-weight: 800;
-  letter-spacing: 0.2px;
+  color: var(--tp-text);
+  font-weight: 900;
+  letter-spacing: 0.1px;
 }
 
 .brand-icon {
@@ -120,10 +114,10 @@ async function handleLogout() {
 
   background: linear-gradient(
     135deg,
-    rgba(20, 184, 166, 0.18),
-    rgba(255, 230, 241, 0.45)
+    rgba(109,90,207, 0.18),
+    rgba(20,184,166, 0.12)
   );
-  border: 1px solid var(--border);
+  border: 1px solid rgba(232,225,217,.85);
 }
 
 .brand-text {
@@ -139,12 +133,12 @@ async function handleLogout() {
 
 .btn {
   border: none;
-  border-radius: 12px;
-  padding: 8px 12px;
-  font-weight: 800;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 900;
   font-size: 13px;
   cursor: pointer;
-  transition: transform 0.05s ease, filter 0.15s ease, background 0.15s ease;
+  transition: transform 0.05s ease, background 0.15s ease, box-shadow 0.2s ease;
 }
 
 .btn:active {
@@ -152,19 +146,24 @@ async function handleLogout() {
 }
 
 .btn-logout {
-  background: var(--accent);
+  background: var(--tp-primary);
   color: #fff;
-  box-shadow: 0 10px 22px rgba(20, 184, 166, 0.18);
+  box-shadow: 0 12px 22px rgba(109,90,207,.20);
 }
 
 .btn-logout:hover {
-  background: var(--accentHover);
+  background: var(--tp-primary-hover);
+  box-shadow: 0 16px 26px rgba(109,90,207,.22);
 }
 
 /* Content */
 .content {
   flex: 1;
   padding: 18px;
+}
+
+.content--auth {
+  padding: 0; /* important */
 }
 
 .content-inner {
@@ -174,8 +173,6 @@ async function handleLogout() {
 
 /* Responsive */
 @media (max-width: 520px) {
-  .header-inner {
-    padding: 0 14px;
-  }
+  .header-inner { padding: 0 14px; }
 }
 </style>

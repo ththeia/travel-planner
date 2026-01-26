@@ -1,10 +1,19 @@
 <template>
-  <div>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h1>Activități</h1>
+  <div class="tp">
+    <div class="tp-toolbar">
+      <div>
+        <h1 class="tp-page-title">Activități</h1>
+        <p class="tp-page-subtitle">Adaugă și editează activitățile pentru această călătorie.</p>
+      </div>
+
+      <div class="tp-toolbar-right">
+        <button class="tp-btn" type="button" @click="goBack">← Înapoi la călătorii</button>
+      </div>
     </div>
 
-    <div style="margin: 12px 0 18px;">
+    <div class="tp-card tp-card--soft" style="margin-bottom: 14px;">
+      <h3 class="tp-title" style="margin-bottom: 10px;">Adaugă o activitate</h3>
+
       <ActivityForm
         :tripId="tripId"
         :editingActivity="editingActivity"
@@ -13,14 +22,12 @@
       />
     </div>
 
-    <div style="border:1px solid #ddd; padding:12px; border-radius:8px;">
-      <h2 style="margin:0 0 8px;">Listă activițăți</h2>
+    <div class="tp-card">
+      <h3 class="tp-title" style="margin-bottom: 10px;">Lista activităților</h3>
 
-      <div v-if="loading">Se încarcă…</div>
-      <div v-else-if="error" style="color:#b00020;">{{ error }}</div>
-      <div v-else-if="activities.length === 0" style="color:#666;">
-        Nu sunt activități de afișat.
-      </div>
+      <div v-if="loading" class="tp-muted">Se încarcă…</div>
+      <div v-else-if="error" class="tp-error">{{ error }}</div>
+      <div v-else-if="activities.length === 0" class="tp-muted">Nu există activități de afișat.</div>
 
       <ActivityList
         v-else
@@ -30,11 +37,6 @@
         @delete="handleDelete"
       />
     </div>
-
-   <button @click="goBack" style="margin-top:16px;">
-     ← Înapoi
-    </button>
-
   </div>
 </template>
 
@@ -42,34 +44,26 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-
-
-
 import { useTripStore } from "@/stores/useTripStore";
 import ActivityForm from "@/components/activities/ActivityForm.vue";
 import ActivityList from "@/components/activities/ActivityList.vue";
 
 const route = useRoute();
-const tripId = route.params.tripId;
-
+const router = useRouter();
 const tripStore = useTripStore();
+
+const tripId = String(route.params.tripId);
 const editingActivity = ref(null);
 
 const activities = computed(() => tripStore.activitiesByTripId?.[tripId] || []);
 const loading = computed(() => !!tripStore.activitiesLoadingByTripId?.[tripId]);
 const error = computed(() => tripStore.activitiesErrorByTripId?.[tripId] || null);
 
-const router = useRouter();
-
 function goBack() {
   router.push("/trips");
 }
 
-
-
-
 onMounted(async () => {
-  // încărcăm lista la intrarea în pagină
   await tripStore.fetchActivities(tripId);
 });
 
@@ -79,10 +73,7 @@ function handleEdit(activity) {
 
 async function handleDelete(activityId) {
   await tripStore.deleteActivity(tripId, activityId);
-
-  if (editingActivity.value?.id === activityId) {
-    editingActivity.value = null;
-  }
+  if (editingActivity.value?.id === activityId) editingActivity.value = null;
 }
 
 function handleSaved() {
@@ -92,6 +83,4 @@ function handleSaved() {
 function handleCancel() {
   editingActivity.value = null;
 }
-
-
 </script>

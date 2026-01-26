@@ -1,55 +1,70 @@
 <template>
-  <div style="border:1px dashed #ccc; padding:12px; border-radius:8px; margin-bottom:12px;">
-    <div style="font-weight:600; margin-bottom:8px;">
-      {{ editingActivity ? "Edit activity" : "Add activity" }}
+  <div class="tp-card tp-card--soft">
+    <div style="font-weight: 900; margin-bottom: 10px;">
+      {{ editingActivity ? "Editează activitatea" : "Adaugă o activitate" }}
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr 160px; gap:12px;">
-      <div>
-        <label>Nume</label>
-        <input v-model="form.name" placeholder="Castelul Bran" style="width:100%;" />
-      </div>
-      <div>
-        <label>Loc</label>
-        <input v-model="form.place" placeholder="Brasov" style="width:100%;" />
-      </div>
-      <div>
-        <label>Preț</label>
-        <input v-model.number="form.price" type="number" min="0" style="width:100%;" />
-      </div>
+    <div class="tp-form-grid">
+      <label class="tp-field">
+        <span>Nume</span>
+        <input v-model="form.name" class="tp-input" placeholder="ex: Castelul Bran" />
+      </label>
+
+      <label class="tp-field">
+        <span>Loc</span>
+        <input v-model="form.place" class="tp-input" placeholder="ex: Brașov" />
+      </label>
+
+      <label class="tp-field">
+        <span>Preț</span>
+        <input v-model.number="form.price" class="tp-input" type="number" min="0" />
+      </label>
     </div>
 
-    <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
-      <button @click="save">{{ editingActivity ? "Save changes" : "Add" }}</button>
-      <button v-if="editingActivity" @click="cancel">Cancel</button>
-      <span v-if="error" style="color:#b00020;">{{ error }}</span>
+    <div class="tp-actions" style="margin-top: 12px;">
+      <button class="tp-btn tp-btn--primary" type="button" @click="save">
+        {{ editingActivity ? "Salvează modificările" : "Adaugă" }}
+      </button>
+
+      <button v-if="editingActivity" class="tp-btn" type="button" @click="cancel">
+        Renunță
+      </button>
+    </div>
+
+    <div v-if="error" class="tp-error" style="margin-top: 12px;">
+      {{ error }}
     </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, watch, ref } from "vue";
-import { useTripStore } from "../../stores/useTripStore";
+import { useTripStore } from "@/stores/useTripStore";
 
 const props = defineProps({
   tripId: { type: String, required: true },
   editingActivity: { type: Object, default: null },
 });
+
 const emit = defineEmits(["saved", "cancel"]);
 
 const tripStore = useTripStore();
 const error = ref("");
 
-const form = reactive({ name: "", place: "", price: 0 });
+const form = reactive({
+  name: "",
+  place: "",
+  price: 0,
+});
 
 watch(
   () => props.editingActivity,
-  (a) => {
+  (val) => {
     error.value = "";
-    if (a) {
-      form.name = a.name ?? "";
-      form.place = a.place ?? "";
-      form.price = a.price ?? 0;
+    if (val) {
+      form.name = val.name ?? "";
+      form.place = val.place ?? "";
+      form.price = Number(val.price ?? 0);
     } else {
       form.name = "";
       form.place = "";
@@ -61,10 +76,10 @@ watch(
 
 function validate() {
   error.value = "";
-  if (!form.name.trim()) return (error.value = "Numele este necesar"), false;
-  if (!form.place.trim()) return (error.value = "Locatia este necesara"), false;
+  if (!form.name.trim()) return (error.value = "Numele este obligatoriu."), false;
+  if (!form.place.trim()) return (error.value = "Locația este obligatorie."), false;
   if (typeof form.price !== "number" || Number.isNaN(form.price) || form.price < 0)
-    return (error.value = "Pretul trebuie sa fie mai mare sau egal cu 0"), false;
+    return (error.value = "Prețul trebuie să fie ≥ 0."), false;
   return true;
 }
 

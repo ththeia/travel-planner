@@ -1,23 +1,28 @@
 <template>
   <div>
-    <h1>Add Trip</h1>
+    <div class="tp-toolbar">
+      <div>
+        <h1 class="tp-page-title">Adaugă călătorie</h1>
+        <p class="tp-page-subtitle">Completează detaliile și salvează.</p>
+      </div>
+
+      <div class="tp-toolbar-right">
+        <button class="tp-btn" type="button" @click="goBack">← Înapoi</button>
+      </div>
+    </div>
 
     <TripsForm />
 
     <!-- Trips List -->
-    <div style="margin-top:18px; border:1px solid #ddd; padding:12px; border-radius:8px;">
-      <h2 style="margin:0 0 8px;">Listă Trips</h2>
+    <div class="tp-card" style="margin-top: 16px;">
+      <h2 style="margin: 0 0 10px; font-weight: 900;">Călătoriile existente</h2>
 
-      <div v-if="loading">Se încarcă…</div>
-      <div v-else-if="error" style="color:#b00020;">{{ error }}</div>
-      <div v-else-if="trips.length === 0" style="color:#666;">Nu sunt activități de afișat.</div>
+      <div v-if="loading" class="tp-muted">Se încarcă…</div>
+      <div v-else-if="error" class="tp-error">{{ error }}</div>
+      <div v-else-if="trips.length === 0" class="tp-muted">Nu există călătorii de afișat.</div>
 
       <TripList v-else :trips="trips" />
     </div>
-
-  <button @click="goBack" style="margin-top:16px;">
-   ← Înapoi
-  </button>
   </div>
 </template>
 
@@ -32,24 +37,15 @@ import { useTripStore } from "@/stores/useTripStore";
 const router = useRouter();
 const tripStore = useTripStore();
 
-const trips = computed(() => tripStore.trips || []);
+const loading = computed(() => tripStore.loading);
+const error = computed(() => tripStore.error);
+const trips = computed(() => tripStore.trips);
 
-const loading = ref(false);
-const error = ref(null);
+onMounted(() => {
+  tripStore.fetchTrips();
+});
 
 function goBack() {
   router.push("/trips");
 }
-
-onMounted(async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    await tripStore.fetchTrips();
-  } catch (e) {
-    error.value = "Failed to load trips";
-  } finally {
-    loading.value = false;
-  }
-});
 </script>

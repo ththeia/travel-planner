@@ -1,5 +1,5 @@
 <template>
-  <div style="display:grid; gap:12px;">
+  <div class="tp-list">
     <TripCard v-for="t in trips" :key="t.id" :trip="t" />
   </div>
 </template>

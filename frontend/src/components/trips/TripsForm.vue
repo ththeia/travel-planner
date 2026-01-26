@@ -1,27 +1,32 @@
 <template>
-  <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:16px;">
-    <h3 style="margin:0 0 12px;">Add Trip</h3>
+  <div class="tp-card">
+    <h3 style="margin: 0 0 12px; font-weight: 900;">Creează o călătorie</h3>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
-      <div>
-        <label>Country</label>
-        <input v-model="form.country" placeholder="Tara" style="width:100%;" />
-      </div>
+    <div class="tp-form-grid">
+      <label class="tp-field">
+        <span>Țara</span>
+        <input v-model="form.country" class="tp-input" placeholder="ex: Italia" />
+      </label>
 
-      <div>
-        <label>Date (YYYY-MM-DD)</label>
-        <input v-model="form.date" placeholder="2026-02-01" style="width:100%;" />
-      </div>
+      <label class="tp-field">
+        <span>Data (YYYY-MM-DD)</span>
+        <input v-model="form.date" class="tp-input" placeholder="2026-02-01" />
+      </label>
 
-      <div>
-        <label>Budget</label>
-        <input v-model.number="form.budget" type="number" min="0" style="width:100%;" />
-      </div>
+      <label class="tp-field">
+        <span>Buget</span>
+        <input v-model.number="form.budget" class="tp-input" type="number" min="0" />
+      </label>
     </div>
 
-    <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-      <button @click="save" :disabled="tripStore.loading">Save</button>
-      <span v-if="error" style="color:#b00020;">{{ error }}</span>
+    <div class="tp-actions" style="margin-top: 12px;">
+      <button class="tp-btn tp-btn--primary" type="button" @click="save" :disabled="tripStore.loading">
+        Salvează
+      </button>
+
+      <span v-if="error" class="tp-error" style="margin: 0; padding: 8px 10px;">
+        {{ error }}
+      </span>
     </div>
   </div>
 </template>
@@ -38,7 +43,7 @@ const error = ref("");
 function validateCalendarDateYYYYMMDD(dateStr) {
   // format strict YYYY-MM-DD
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return "Data trebuie sa fie de forma YYYY-MM-DD";
+    return "Data trebuie să fie în formatul YYYY-MM-DD";
   }
 
   const [yStr, mStr, dStr] = dateStr.split("-");
@@ -47,54 +52,67 @@ function validateCalendarDateYYYYMMDD(dateStr) {
   const day = Number(dStr);
 
   if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
-    return "Data Invalida";
+    return "Data este invalidă";
   }
 
   const currentYear = new Date().getFullYear();
   if (year < currentYear) {
-    return `Anul trebuie sa fie mai mare de  ${currentYear}`;
+    return `Anul trebuie să fie cel puțin ${currentYear}`;
   }
 
   if (month < 1 || month > 12) {
-    return "Luna trebuie sa fie intre 01 si 12";
+    return "Luna trebuie să fie între 01 și 12";
   }
 
   // zile valide pentru luna respectivă (include leap year)
   const daysInMonth = new Date(year, month, 0).getDate(); // month: 1-12 OK
   if (day < 1 || day > daysInMonth) {
-    return `Ziua trebuie sa fie intre 01 si ${String(daysInMonth).padStart(2, "0")}`;
+    return `Ziua trebuie să fie între 01 și ${String(daysInMonth).padStart(2, "0")}`;
   }
 
   return null;
 }
 
-function validate() {
+async function save() {
   error.value = "";
 
-  if (!form.country.trim()) return (error.value = "country is required"), false;
-
-  const dateStr = String(form.date || "").trim();
-  const dateErr = validateCalendarDateYYYYMMDD(dateStr);
-  if (dateErr) return (error.value = dateErr), false;
-
-  if (typeof form.budget !== "number" || Number.isNaN(form.budget) || form.budget < 0) {
-    return (error.value = "Bugetul trebuie sa fie mai mare sau egal cu 0"), false;
+  if (!form.country.trim()) {
+    error.value = "Trebuie să specifici țara de destinație.";
+    return;
   }
 
-  return true;
-}
+  const dateStr = String(form.date || "").trim();
+  if (!dateStr) {
+    error.value = "Data este necesară.";
+    return;
+  }
 
-async function save() {
-  if (!validate()) return;
+  const dateErr = validateCalendarDateYYYYMMDD(dateStr);
+  if (dateErr) {
+    error.value = dateErr;
+    return;
+  }
 
-  await tripStore.createTrip({
-    country: form.country.trim(),
-    date: String(form.date).trim(),
-    budget: form.budget,
-  });
+  const budget = Number(form.budget);
+  if (Number.isNaN(budget) || budget < 0) {
+    error.value = "Bugetul trebuie să fie ≥ 0.";
+    return;
+  }
 
-  form.country = "";
-  form.date = "";
-  form.budget = 0;
+  try {
+    await tripStore.createTrip({
+      country: form.country.trim(),
+      date: dateStr,
+      budget,
+    });
+
+    form.country = "";
+    form.date = "";
+    form.budget = 0;
+
+    await tripStore.fetchTrips();
+  } catch (e) {
+    error.value = e?.message || "Nu s-au putut salva datele.";
+  }
 }
 </script>

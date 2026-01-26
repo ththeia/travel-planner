@@ -1,0 +1,349 @@
+/* ===== Fonts (no index.html needed) ===== */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap");
+
+/* ===== Theme ===== */
+:root{
+  /* Brand (Soft Plum & Cream) */
+  --tp-primary: #6D5ACF;
+  --tp-primary-hover: #5B4BB8;
+  --tp-secondary: #14B8A6;
+
+  /* Surfaces */
+  --tp-cream: #FBF7F2;
+  --tp-border: #E8E1D9;
+
+  /* Text */
+  --tp-text: #1F2937;
+  --tp-muted: #6B7280;
+
+  /* Feedback */
+  --tp-danger: #EF4444;
+
+  /* Radius & shadows */
+  --tp-radius: 18px;
+  --tp-shadow: 0 20px 40px rgba(31,41,55,.12);
+  --tp-shadow-soft: 0 10px 20px rgba(31,41,55,.08);
+}
+
+*{ box-sizing: border-box; }
+
+html, body{ height:100%; }
+
+body{
+  margin:0;
+  color: var(--tp-text);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+
+  /* calm, elegant background */
+  background:
+    radial-gradient(900px 520px at 18% 12%, rgba(109,90,207,.18), transparent 60%),
+    radial-gradient(900px 520px at 82% 18%, rgba(20,184,166,.16), transparent 55%),
+    linear-gradient(180deg, #F5EFE9 0%, #D8CFEA 100%);
+  background-attachment: fixed;
+}
+
+/* Wrapper class you already use */
+.tp{ width:100%; }
+
+/* ===== Typography ===== */
+.tp .tp-page-title{
+  margin: 6px 0 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(28px, 3.2vw, 40px);
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  font-weight: 800;
+}
+
+.tp .tp-page-subtitle{
+  margin: 8px 0 0;
+  color: var(--tp-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* ===== Toolbar ===== */
+.tp .tp-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 6px 0 18px;
+}
+
+.tp .tp-toolbar-right{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+}
+
+/* ===== App surface panel (makes pages look finished) ===== */
+.tp .tp-surface{
+  padding: 18px;
+  border-radius: calc(var(--tp-radius) + 6px);
+  background: rgba(251,247,242,.72);
+  border: 1px solid rgba(232,225,217,.55);
+  box-shadow: 0 18px 40px rgba(31,41,55,.10);
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 520px){
+  .tp .tp-surface{ padding: 14px; }
+}
+
+/* ===== Cards ===== */
+.tp .tp-card{
+  background: var(--tp-cream);
+  border: 1px solid rgba(232,225,217,.85);
+  border-radius: var(--tp-radius);
+  box-shadow: var(--tp-shadow);
+  padding: 14px;
+}
+
+.tp .tp-card--soft{
+  border-style: dashed;
+  box-shadow: none;
+  background: rgba(251,247,242,.55);
+}
+
+/* ===== Grid for trips ===== */
+.tp .tp-grid{
+  display:grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 820px){
+  .tp .tp-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px){
+  .tp .tp-grid{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ===== Row helpers ===== */
+.tp .tp-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tp .tp-title{
+  font-weight: 900;
+  font-size: 18px;
+  margin: 0;
+}
+
+.tp .tp-meta{
+  margin-top: 8px;
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--tp-muted);
+  font-size: 13px;
+}
+
+/* ===== Badges ===== */
+.tp .tp-badge{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(109,90,207,.10);
+  color: rgba(63,51,140,.95);
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(109,90,207,.18);
+}
+
+/* ===== Buttons ===== */
+.tp .tp-btn{
+  appearance:none;
+  border: 1px solid rgba(232,225,217,.95);
+  background: rgba(255,255,255,.75);
+  color: var(--tp-text);
+  padding: 9px 12px;
+  border-radius: 999px; /* calmer, classier */
+  font-weight: 900;
+  font-size: 13px;
+  cursor:pointer;
+  transition: transform .06s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.tp .tp-btn:hover{
+  border-color: rgba(109,90,207,.20);
+  box-shadow: var(--tp-shadow-soft);
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.92);
+}
+
+.tp .tp-btn:active{
+  transform: translateY(1px);
+}
+
+.tp .tp-btn--primary{
+  border-color: transparent;
+  background: var(--tp-primary);
+  color:#fff;
+  box-shadow: 0 12px 22px rgba(109,90,207,.25);
+}
+
+.tp .tp-btn--primary:hover{
+  background: var(--tp-primary-hover);
+}
+
+.tp .tp-btn--danger{
+  border-color: rgba(239,68,68,.25);
+  background: rgba(239,68,68,.08);
+  color: var(--tp-danger);
+}
+/* ===== Focus states (safe) ===== */
+.tp .tp-input:focus-visible,
+.tp input:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(109,90,207,.14);
+}
+
+/* focus ring for app buttons only */
+.tp .tp-btn:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(109,90,207,.16),
+    var(--tp-shadow-soft);
+}
+
+
+/* ===== Action groups ===== */
+.tp .tp-actions{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items:center;
+}
+
+/* ===== Inputs ===== */
+.tp .tp-field{
+  display:grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--tp-muted);
+}
+
+.tp .tp-input{
+  width:100%;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(232,225,217,.95);
+  outline:none;
+  background: rgba(255,255,255,.75);
+  transition: box-shadow .15s, border-color .15s, background .15s;
+}
+
+.tp .tp-input:focus{
+  border-color: rgba(109,90,207,.45);
+  box-shadow: 0 0 0 4px rgba(109,90,207,.14);
+  background:#fff;
+}
+
+/* ===== Forms grid ===== */
+.tp .tp-form-grid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 820px){
+  .tp .tp-form-grid{
+    grid-template-columns: 1fr 1fr 180px;
+  }
+}
+
+/* ===== Messages ===== */
+.tp .tp-error{
+  color: #b00020;
+  background: rgba(176,0,32,.06);
+  border: 1px solid rgba(176,0,32,.18);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.tp .tp-muted{
+  color: var(--tp-muted);
+}
+
+/* ===== Trip card layout helpers (kept) ===== */
+.tp .trip-card{
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tp .trip-header{
+  display:flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items:flex-start;
+  flex-wrap: wrap;
+}
+
+.tp .trip-actions{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px){
+  .tp .trip-actions{
+    width:100%;
+  }
+}
+
+/* ===== Activities panel ===== */
+.tp .tp-panel{
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px dashed rgba(109,90,207,.18);
+  background: rgba(251,247,242,.60);
+}
+
+/* ===== List layout (activities) ===== */
+.tp .tp-list{
+  display:flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+  width:100%;
+}
+
+.tp .tp-activity-card{
+  width:100%;
+  padding: 12px;
+  box-shadow: 0 10px 18px rgba(31,41,55,.06);
+}
+
+.tp .tp-activity-title{
+  font-weight: 900;
+  margin: 0;
+}
+/*hover pt cardss*/
+.tp .tp-card{
+  transition: transform .12s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.tp .tp-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 26px 50px rgba(31,41,55,.14);
+  border-color: rgba(109,90,207,.18);
+}
